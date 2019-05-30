@@ -8,23 +8,21 @@ from . import expressions
 
 class Statement(NodeBase):
 
-    _count = {}
+    node_class = "Statement"
 
     def __init__(self, node, parent):
         super().__init__(node, parent)
-        self._count.setdefault(self.node_type, 0)
-        self._count[self.node_type] += 1
 
 
-class IfStatement(ListNodeBase):
+class IfStatement(NodeBase, ListNodeBase):
 
     def __init__(self, node, parent):
-        self.depth = parent.depth + 1
+        super().__init__(node, parent)
         self.condition = expressions.get_object(node.pop('condition'), self)
         for key in ['trueBody', 'falseBody']:
             body = get_object(node.pop(key), self) if node[key] else []
             setattr(self, key[:-4], body if type(body) is list else [body])
-        super().__init__(node, parent, [self.true, self.false])
+        ListNodeBase.__init__(self, [self.true, self.false])
 
 
 class WhileStatement(NodeBase):
@@ -35,17 +33,15 @@ class WhileStatement(NodeBase):
         self.body = get_object(node.pop('body'), self)
 
 
-class ForStatement(ListNodeBase):
+class ForStatement(NodeBase, ListNodeBase):
 
     def __init__(self, node, parent):
-        self.depth = parent.depth + 1
-        self.expressions = [
-            get_object(node.pop('initializationExpression'), self),
-            expressions.get_object(node.pop('condition'), self),
-            expressions.get_object(node.pop('loopExpression'), self)
-        ]
+        super().__init__(node, parent)
+        self.init = get_object(node.pop('initializationExpression'), self)
+        self.condition = expressions.get_object(node.pop('condition'), self)
+        self.loop = expressions.get_object(node.pop('loopExpression'), self)
         self.body = get_object(node.pop('body'), self)
-        super().__init__(node, parent, [self.body])
+        ListNodeBase.__init__(self, self.body)
 
 
 class VariableDeclarationStatement(NodeBase):
@@ -76,6 +72,8 @@ class EmitStatement(NodeBase):
     def __init__(self, node, parent):
         name = node['eventCall']['expression']['name']
         super().__init__(node.pop('eventCall'), parent)
+        src = [int(i) for i in node['src'].split(':')]
+        self.offset = [src[0], src[0]+src[1]]
         self.name = name
 
 

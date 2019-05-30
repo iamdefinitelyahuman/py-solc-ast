@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from .bases import ListNodeBase
+from .bases import NodeBase, ListNodeBase
 from . import statements
 
 
@@ -11,34 +11,35 @@ def _get_nodes(node, type_, class_, parent):
     return [class_(i, parent) for i in result]
 
 
-class SourceUnit(ListNodeBase):
+class SourceUnit(NodeBase, ListNodeBase):
 
     def __init__(self, node):
         self.depth = 0
+        super().__init__(node, None)
         if node['nodeType'] != "SourceUnit":
             raise ValueError("Wrong node type - {}".format(node['nodeType']))
         self.path = node['absolutePath']
         self.contracts = _get_nodes(node, "ContractDefinition", ContractDefinition, self)
-        super().__init__(node, None, [self.contracts])
+        ListNodeBase.__init__(self, self.contracts)
 
 
-class ContractDefinition(ListNodeBase):
+class ContractDefinition(NodeBase, ListNodeBase):
 
     def __init__(self, node, parent):
-        self.depth = parent.depth + 1
+        super().__init__(node, parent)
         self.functions = _get_nodes(node, "FunctionDefinition", FunctionDefinition, self)
-        super().__init__(node, parent, [self.functions])
+        ListNodeBase.__init__(self, self.functions)
 
 
-class FunctionDefinition(ListNodeBase):
+class FunctionDefinition(NodeBase, ListNodeBase):
 
     def __init__(self, node, parent):
-        self.depth = parent.depth + 1
+        super().__init__(node, parent)
         if node['body']:
             self.statements = statements.get_object(node.pop('body'), self)
         else:
             self.statements = []
-        super().__init__(node, parent, [self.statements])
+        ListNodeBase.__init__(self, self.statements)
         if node['isConstructor']:
             self.name = "<constructor>"
         elif self.name is "":

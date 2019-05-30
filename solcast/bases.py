@@ -12,8 +12,7 @@ class NodeBase:
         self.offset = [src[0], src[0]+src[1]]
         self.contract_id = src[2]
         self.parent = parent
-        if parent is not None:
-            self.depth = parent.depth + 1
+        self.depth = parent.depth + 1 if parent is not None else 0
 
     def __repr__(self):
         name = type(self).__name__
@@ -77,11 +76,10 @@ class NodeBase:
         return result
 
 
-class ListNodeBase(NodeBase):
+class ListNodeBase:
 
-    def __init__(self, node, parent, containers):
-        super().__init__(node, parent)
-        self._iter_list = [x for i in containers for x in i]
+    def __init__(self, iter_list):
+        self._iter_list = iter_list
 
     def __getitem__(self, key):
         if type(key) is str:

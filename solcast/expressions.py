@@ -21,63 +21,11 @@ class Expression(NodeBase):
                 setattr(self, key, get_object(value, self))
 
 
-class UserDefinedTypeName(NodeBase):
-    pass
-
-
-class ElementaryTypeName(NodeBase):
-    pass
-
-
-class ArrayTypeName(NodeBase):
-
-    def __init__(self, node, parent):
-        super().__init__(node, parent)
-        self.type = get_object(node.pop('baseType'), self)
-        self.name = node['typeDescriptions']['typeString']
-
-
-class Identifier(NodeBase):
-    pass
-
-
-class Literal(NodeBase):
-
-    def __init__(self, node, parent):
-        super().__init__(node, parent)
-        self.type = node['kind']
-
-    def _display(self):
-        return self.value
-
-
 class NewExpression(NodeBase):
 
     def __init__(self, node, parent):
         super().__init__(node, parent)
         self.type = get_object(node.pop('typeName'), self)
-
-
-class ElementaryTypeNameExpression(NodeBase):
-
-    def __init__(self, node, parent):
-        super().__init__(node, parent)
-        self.name = node['typeName']
-
-
-class VariableDeclaration(NodeBase):
-
-    def __init__(self, node, parent):
-        super().__init__(node, parent)
-        self.type = get_object(node.pop('typeName'), self)
-
-
-class MemberAccess(NodeBase):
-
-    def __init__(self, node, parent):
-        super().__init__(node, parent)
-        self.expression = get_object(node.pop('expression'), self)
-        self.name = self.expression._display()+"."+node['memberName']
 
 
 class IndexAccess(NodeBase):
@@ -89,12 +37,12 @@ class IndexAccess(NodeBase):
         self.name = "{}[{}]".format(self.base._display(), self.index._display())
 
 
-class Mapping(NodeBase):
+class MemberAccess(NodeBase):
 
     def __init__(self, node, parent):
         super().__init__(node, parent)
-        self.key = get_object(node.pop('keyType'), self)
-        self.value = get_object(node.pop('valueType'), self)
+        self.expression = get_object(node.pop('expression'), self)
+        self.name = self.expression._display()+"."+node['memberName']
 
 
 class FunctionCall(NodeBase):
@@ -112,6 +60,70 @@ class FunctionCall(NodeBase):
         )
 
 
+class Literal(NodeBase):
+
+    def __init__(self, node, parent):
+        super().__init__(node, parent)
+        self.type = node['kind']
+
+    def _display(self):
+        return self.value
+
+
+class TupleExpression(NodeBase, ListNodeBase):
+
+    def __init__(self, node, parent):
+        super().__init__(node, parent)
+        self.components = get_objects(node.pop('components'), self)
+        ListNodeBase.__init__(self, self.components)
+        self.name = node['typeDescriptions']['typeString']
+
+    def _display(self):
+        return "{}=({})".format(self.name, ", ".join(i._display() for i in self.components))
+
+
+class Identifier(NodeBase):
+    pass
+
+
+class ElementaryTypeName(NodeBase):
+    pass
+
+
+class ElementaryTypeNameExpression(NodeBase):
+
+    def __init__(self, node, parent):
+        super().__init__(node, parent)
+        self.name = node['typeName']
+
+
+class UserDefinedTypeName(NodeBase):
+    pass
+
+
+class ArrayTypeName(NodeBase):
+
+    def __init__(self, node, parent):
+        super().__init__(node, parent)
+        self.type = get_object(node.pop('baseType'), self)
+        self.name = node['typeDescriptions']['typeString']
+
+
+class Mapping(NodeBase):
+
+    def __init__(self, node, parent):
+        super().__init__(node, parent)
+        self.key = get_object(node.pop('keyType'), self)
+        self.value = get_object(node.pop('valueType'), self)
+
+
+class VariableDeclaration(NodeBase):
+
+    def __init__(self, node, parent):
+        super().__init__(node, parent)
+        self.type = get_object(node.pop('typeName'), self)
+
+
 class UnaryOperation(NodeBase):
 
     def __init__(self, node, parent):
@@ -123,15 +135,15 @@ class UnaryOperation(NodeBase):
             self.name = self.expression.name+node['operator']
 
 
-class _TwoSidedExpression(ListNodeBase):
+class _TwoSidedExpression(NodeBase, ListNodeBase):
 
     def __init__(self, node, parent, key):
-        self.depth = parent.depth + 1
+        super().__init__(node, parent)
         self.left = get_object(node.pop('left'+key), self)
         self.right = get_object(node.pop('right'+key), self)
         self.operator = node.pop('operator')
         self.type = node['typeDescriptions']['typeString']
-        super().__init__(node, parent, [[self.left, self.right]])
+        ListNodeBase.__init__(self, [self.left, self.right])
 
     def _display(self):
         return "{} {} {}".format(self.left._display(), self.operator, self.right._display())
@@ -147,18 +159,6 @@ class Assignment(_TwoSidedExpression):
 
     def __init__(self, node, parent):
         super().__init__(node, parent, 'HandSide')
-
-
-class TupleExpression(ListNodeBase):
-
-    def __init__(self, node, parent):
-        self.depth = parent.depth + 1
-        self.components = get_objects(node.pop('components'), self)
-        super().__init__(node, parent, [self.components])
-        self.name = node['typeDescriptions']['typeString']
-
-    def _display(self):
-        return "{}=({})".format(self.name, ", ".join(i._display() for i in self.components))
 
 
 class Conditional(NodeBase):
