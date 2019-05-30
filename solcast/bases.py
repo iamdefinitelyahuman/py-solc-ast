@@ -9,7 +9,7 @@ class NodeBase:
         self.name = node['name'] if 'name' in node else None
         self.value = node['value'] if 'value' in node else None
         src = [int(i) for i in node['src'].split(':')]
-        self.offset = (src[0], src[0]+src[1])
+        self.offset = [src[0], src[0]+src[1]]
         self.contract_id = src[2]
         self.parent = parent
         if parent is not None:
@@ -32,6 +32,11 @@ class NodeBase:
         else:
             repr_str += " object"
         return repr_str+">"
+
+    def __eq__(self, other):
+        if type(other) is str:
+            return self.node_type == other
+        return super().__eq__(other)
 
     def _display(self):
         if self.name and self.value:
