@@ -12,18 +12,30 @@ $ python setup.py install
 
 ## Usage
 
-Import the package and initialize it using ``solcast.from_json`` or ``solcast.from_ast``. This returns a ``SourceUnit`` object, which represents the base node in a Solidity AST.
+First, use [py-solc-x](https://github.com/iamdefinitelyahuman/py-solc-x) to compile your contracts to the [standard JSON output format](https://solidity.readthedocs.io/en/latest/using-the-compiler.html#output-description).
+
+```python
+>>> import json
+>>> import solcx
+>>> input_json = json.load(open('input.json'))
+>>> output_json = solcx.compile_standard(input_json)
+```
+
+Next, import ``solcast`` and initialize using ``from_standard_output_json`` or ``from_standard_output``. This returns a list of ``SourceUnit`` objects, which each represent the base node in a Solidity AST.
 
 ```python
 >>> import solcast
->>> s = solcast.from_json("token.json")
+>>> nodes = solcast.from_standard_output(output_json)
 ```
 
-From the initial object, you can explore the AST:
+From the initial objects, you can explore the AST:
 
 ```python
+>>> nodes
+[<SourceUnit iterable object 'contracts/Token.sol'>]
+>>> s = nodes[0]
 >>> s
-<SourceUnit iterable object>
+<SourceUnit iterable object 'contracts/Token.sol'>
 
 >>> s.keys()
 ['children', 'contract_id', 'contracts', 'depth', 'keys', 'name', 'node_type', 'offset', 'parent', 'path', 'value']
