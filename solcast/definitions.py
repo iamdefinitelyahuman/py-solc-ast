@@ -30,7 +30,11 @@ class FunctionDefinition(Definition, ListNodeBase):
         else:
             self.statements = []
         ListNodeBase.__init__(self, self.statements)
-        if node['isConstructor']:
+        if self.name:
+            return
+        if 'kind' in node and node['kind'] != "function":
+            self.name = '<{}>'.format(node['kind'])
+        elif 'isConstructor' in node and node['isConstructor']:
             self.name = "<constructor>"
-        elif self.name is "":
+        else:
             self.name = "<fallback>"
