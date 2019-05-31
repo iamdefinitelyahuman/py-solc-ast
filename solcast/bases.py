@@ -42,6 +42,14 @@ class NodeBase:
             return "'{}' = {}".format(self.name, self.value)
         return self.name or self.value or ""
 
+    def _unimplemented(self):
+        '''Returns a list of keys that lead to child nodes that have not yet
+        been implemented within py-solc-ast.'''
+        return [
+            k for k, v in self._node.items() if type(v) is dict and 'nodeType' in v or
+            type(v) is list and v and type(v[0]) is dict and 'nodeType' in v[0]
+        ]
+
     def keys(self):
         return [i for i in dir(self) if not i.startswith('_')]
 
