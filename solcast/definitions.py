@@ -17,6 +17,7 @@ class ContractDefinition(Definition, ListNodeBase):
 
     def __init__(self, node, parent):
         super().__init__(node, parent)
+        self.type = node['contractKind']
         self.libraries = dict((
             i['typeName']['name'],
             i['libraryName']['name']

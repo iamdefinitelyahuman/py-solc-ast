@@ -83,7 +83,10 @@ class TupleExpression(NodeBase, ListNodeBase):
 
 
 class Identifier(NodeBase):
-    pass
+
+    def __init__(self, node, parent):
+        super().__init__(node, parent)
+        self.reference = node['referencedDeclaration']
 
 
 class ElementaryTypeName(NodeBase):

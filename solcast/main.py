@@ -24,13 +24,17 @@ def from_standard_output(output_json):
         sources.append(from_ast(ast))
         symbols.update((v[0], sources[-1][k]) for k, v in ast['exportedSymbols'].items())
     for contract in [x for i in sources for x in i]:
-        contract.dependencies = []
+        contract.dependencies = set()
         for key in contract._node['contractDependencies']:
-            contract.dependencies.append(symbols[key])
+            contract.dependencies.add(symbols[key])
         for node in [i for i in contract._node['nodes'] if i['nodeType'] == "UsingForDirective"]:
             contract._node['nodes'].remove(node)
             id_ = node['libraryName']['referencedDeclaration']
             contract.libraries[node['typeName']['name']] = symbols[id_]
+        for node in contract.children(node_type="Identifier"):
+            if node.reference in symbols and symbols[node.reference].type == "library":
+                contract.dependencies.add(symbols[key])
+        contract.dependencies = sorted(contract.dependencies, key=lambda k: k.name)
     return sources
 
 

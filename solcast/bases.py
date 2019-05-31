@@ -14,6 +14,9 @@ class NodeBase:
         self.parent = parent
         self.depth = parent.depth + 1 if parent is not None else 0
 
+    def __hash__(self):
+        return hash("{0.node_type}{0.depth}{0.offset}{0.name}".format(self))
+
     def __repr__(self):
         name = type(self).__name__
         repr_str = "<" + name
