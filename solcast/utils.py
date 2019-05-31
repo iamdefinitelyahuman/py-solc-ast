@@ -51,3 +51,14 @@ def get_node_objects(node, node_type, class_, parent):
     for i in result:
         node['nodes'].remove(i)
     return [class_(i, parent) for i in result]
+
+
+def is_inside_offset(inner, outer):
+    '''Checks if the first offset is contained in the second offset
+
+    Args:
+        inner: inner offset tuple
+        outer: outer offset tuple
+
+    Returns: bool'''
+    return outer[0] <= inner[0] <= inner[1] <= outer[1]
