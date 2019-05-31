@@ -37,11 +37,6 @@ class NodeBase:
             repr_str += " object"
         return repr_str+">"
 
-    def __eq__(self, other):
-        if type(other) is str:
-            return self.node_type == other
-        return super().__eq__(other)
-
     def _display(self):
         if self.name and self.value:
             return "'{}' = {}".format(self.name, self.value)
