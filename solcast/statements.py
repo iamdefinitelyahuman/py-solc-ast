@@ -14,7 +14,7 @@ class Statement(NodeBase):
         super().__init__(node, parent)
 
 
-class IfStatement(NodeBase, ListNodeBase):
+class IfStatement(Statement, ListNodeBase):
 
     def __init__(self, node, parent):
         super().__init__(node, parent)
@@ -25,7 +25,7 @@ class IfStatement(NodeBase, ListNodeBase):
         ListNodeBase.__init__(self, [self.true, self.false])
 
 
-class WhileStatement(NodeBase):
+class WhileStatement(Statement):
 
     def __init__(self, node, parent):
         super().__init__(node, parent)
@@ -33,18 +33,18 @@ class WhileStatement(NodeBase):
         self.body = get_object(node.pop('body'), self)
 
 
-class ForStatement(NodeBase, ListNodeBase):
+class ForStatement(Statement, ListNodeBase):
 
     def __init__(self, node, parent):
         super().__init__(node, parent)
         self.init = get_object(node.pop('initializationExpression'), self)
         self.condition = expressions.get_object(node.pop('condition'), self)
-        self.loop = expressions.get_object(node.pop('loopExpression'), self)
+        self.loop = get_object(node.pop('loopExpression'), self)
         self.body = get_object(node.pop('body'), self)
         ListNodeBase.__init__(self, self.body)
 
 
-class VariableDeclarationStatement(NodeBase):
+class VariableDeclarationStatement(Statement):
 
     def __init__(self, node, parent):
         super().__init__(node, parent)
@@ -55,19 +55,19 @@ class VariableDeclarationStatement(NodeBase):
             self.initival_value = None
 
 
-class ExpressionStatement:
+class ExpressionStatement(Statement):
 
     def __init__(self, node, parent):
         super().__init__(node.pop('expression'), parent)
 
 
-class Return:
+class Return(Statement):
 
     def __init__(self, node, parent):
         super().__init__(node.pop('expression') or node, parent)
 
 
-class EmitStatement(NodeBase):
+class EmitStatement(Statement):
 
     def __init__(self, node, parent):
         name = node['eventCall']['expression']['name']
