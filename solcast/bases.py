@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+from .utils import is_inside_offset
+
 
 class NodeBase:
 
@@ -53,6 +55,15 @@ class NodeBase:
             type(v) is list and v and type(v[0]) is dict and 'nodeType' in v[0]
         ]
 
+    def _children(self):
+        node_list = []
+        for obj in [getattr(self, i) for i in self.keys() if i != "parent"]:
+            if type(obj) is list and obj and hasattr(obj[0], 'node_type'):
+                node_list.extend(obj)
+            elif hasattr(obj, 'node_type'):
+                node_list.append(obj)
+        return node_list
+
     def keys(self):
         return [i for i in dir(self) if not i.startswith('_')]
 
@@ -75,16 +86,31 @@ class NodeBase:
             depth -= 1
             if depth < 0:
                 return [self] if (include_self and _check_filters(self, filters)) else []
-        result = []
-        for obj in [getattr(self, i) for i in self.keys() if i != "parent"]:
-            if type(obj) is list and obj and hasattr(obj[0], 'node_type'):
-                for node in obj:
-                    result.extend(node.children(depth, True, include_parents, **filters))
-            elif hasattr(obj, 'node_type'):
-                result.extend(obj.children(depth, True, include_parents, **filters))
-        if include_self and _check_filters(self, filters) and (include_parents or not result):
-            result.insert(0, self)
-        return result
+        node_list = []
+        for node in self._children():
+            node_list.extend(node.children(depth, True, include_parents, **filters))
+        if include_self and _check_filters(self, filters) and (include_parents or not node_list):
+            node_list.insert(0, self)
+        return node_list
+
+    def child_by_offset(self, offset, exact=False):
+        '''Get an immediate child node based on a source offset.
+
+        Arguments:
+            offset: A source offset as (start, stop)
+            exact: If False, returns a child where the given offset is contained
+                   inside the child's offset. If True, only returns an exact match.
+
+        Returns:
+            Node object.'''
+        try:
+            if exact:
+                return next(i for i in self.children() if list(offset) == i.offset)
+            return next(i for i in self.children() if is_inside_offset(offset, i.offset))
+        except StopIteration:
+            raise KeyError(
+                "No node with {}offset match of {}".format("exact " if exact else "", offset)
+            )
 
 
 class ListNodeBase:
@@ -105,6 +131,9 @@ class ListNodeBase:
 
     def __len__(self):
         return len(self._iter_list)
+
+    def __contains__(self, obj):
+        return obj in self._iter_list
 
 
 def _check_filters(node, filters):
