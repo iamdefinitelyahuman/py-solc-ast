@@ -3,48 +3,38 @@
 import json
 from pathlib import Path
 
-
 from .bases import NodeBase, ListNodeBase
 from .definitions import ContractDefinition
-from .utils import get_node_objects
+from .utils import (
+    set_dependencies,
+    get_node_objects,
+)
 
 
 def from_standard_output_json(path):
-    '''Given the path to a json file containing standard compiler output,
-    returns a list of SourceUnit objects.'''
+    '''Generates SourceUnit objects from a standard output json file.
+
+    Arguments:
+        path: path to the json file'''
     output_json = json.load(Path(path).open())
     return from_standard_output(output_json)
 
 
 def from_standard_output(output_json):
-    '''Given solc standard compiler output as a dict, returns a list of SourceUnit objects.'''
-    symbols = {}
-    sources = []
-    for ast in [v['ast'] for v in output_json['sources'].values()]:
-        sources.append(from_ast(ast))
-        symbols.update((v[0], sources[-1][k]) for k, v in ast['exportedSymbols'].items())
-    for contract in [x for i in sources for x in i]:
-        contract.dependencies = set()
-        for key in contract._node['contractDependencies']:
-            contract.dependencies.add(symbols[key])
-        for node in [i for i in contract._node['nodes'] if i['nodeType'] == "UsingForDirective"]:
-            contract._node['nodes'].remove(node)
-            id_ = node['libraryName']['referencedDeclaration']
-            contract.libraries[node['typeName']['name']] = symbols[id_]
-        for node in contract.children(node_type="Identifier"):
-            if node.reference in symbols and symbols[node.reference].type == "library":
-                contract.dependencies.add(symbols[key])
-        contract.dependencies = sorted(contract.dependencies, key=lambda k: k.name)
-    return sources
+    '''Generates SourceUnit objects from a standard output json as a dict.
 
-
-def from_ast(ast):
-    return SourceUnit(ast['ast'] if 'ast' in ast else ast)
+    Arguments:
+        output_json: dict of standard compiler output'''
+    source_nodes = [SourceUnit(v['ast']) for v in output_json['sources'].values()]
+    source_nodes = set_dependencies(source_nodes)
+    return source_nodes
 
 
 class SourceUnit(NodeBase, ListNodeBase):
 
     def __init__(self, node):
+        if 'ast' in node:
+            node = node['ast']
         self.depth = 0
         super().__init__(node, None)
         if node['nodeType'] != "SourceUnit":
