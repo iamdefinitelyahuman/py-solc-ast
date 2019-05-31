@@ -17,6 +17,10 @@ class ContractDefinition(Definition, ListNodeBase):
 
     def __init__(self, node, parent):
         super().__init__(node, parent)
+        self.libraries = dict((
+            i['typeName']['name'],
+            i['libraryName']['name']
+        ) for i in node['nodes'] if i['nodeType'] == "UsingForDirective")
         self.functions = get_node_objects(node, "FunctionDefinition", FunctionDefinition, self)
         ListNodeBase.__init__(self, self.functions)
 
