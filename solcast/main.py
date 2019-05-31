@@ -40,5 +40,6 @@ class SourceUnit(NodeBase, ListNodeBase):
         if node['nodeType'] != "SourceUnit":
             raise ValueError("Wrong node type - {}".format(node['nodeType']))
         self.name = node['absolutePath']
+        self.path = node['absolutePath']
         self.contracts = get_node_objects(node, "ContractDefinition", ContractDefinition, self)
         ListNodeBase.__init__(self, self.contracts)

@@ -5,4 +5,4 @@ py_solc_ast.egg-info/
 test.py
 build/
 dist/
-
+*.pyc

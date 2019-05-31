@@ -54,8 +54,8 @@ class NodeBase:
         node_list = []
         for obj in [getattr(self, i) for i in self.keys() if i != "parent"]:
             if type(obj) is list and obj and hasattr(obj[0], 'node_type'):
-                node_list.extend(obj)
-            elif hasattr(obj, 'node_type'):
+                node_list.extend([i for i in obj if i.depth == self.depth + 1])
+            elif hasattr(obj, 'node_type') and obj.depth == self.depth + 1:
                 node_list.append(obj)
         return node_list
 
@@ -100,8 +100,8 @@ class NodeBase:
             Node object.'''
         try:
             if exact:
-                return next(i for i in self.children() if list(offset) == i.offset)
-            return next(i for i in self.children() if is_inside_offset(offset, i.offset))
+                return next(i for i in self._children() if list(offset) == i.offset)
+            return next(i for i in self._children() if is_inside_offset(offset, i.offset))
         except StopIteration:
             raise KeyError(
                 "No node with {}offset match of {}".format("exact " if exact else "", offset)
