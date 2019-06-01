@@ -107,6 +107,21 @@ class NodeBase:
                 "No node with {}offset match of {}".format("exact " if exact else "", offset)
             )
 
+    def root(self, depth=1):
+        '''Returns the parent node object at the given depth.'''
+        if depth >= self.depth:
+            raise ValueError("Given depth exceeds object depth")
+        parent = self.parent
+        while parent.depth > depth:
+            parent = parent.parent
+        return parent
+
+    def is_child_of(self, node):
+        '''Checks if the given node object is a child of this object.'''
+        if node.depth >= self.depth:
+            return False
+        return self.root(node.depth) == node
+
 
 class ListNodeBase:
 
