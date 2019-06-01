@@ -11,7 +11,7 @@ class NodeBase:
         self.name = node['name'] if 'name' in node else None
         self.value = node['value'] if 'value' in node else None
         src = [int(i) for i in node['src'].split(':')]
-        self.offset = [src[0], src[0]+src[1]]
+        self.offset = (src[0], src[0]+src[1])
         self.contract_id = src[2]
         self.parent = parent
         self.depth = parent.depth + 1 if parent is not None else 0
@@ -111,7 +111,7 @@ class NodeBase:
             Node object.'''
         try:
             if exact:
-                return next(i for i in self._children() if list(offset) == i.offset)
+                return next(i for i in self._children() if tuple(offset) == i.offset)
             return next(i for i in self._children() if is_inside_offset(offset, i.offset))
         except StopIteration:
             raise KeyError(

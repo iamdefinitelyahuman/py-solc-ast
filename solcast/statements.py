@@ -73,7 +73,7 @@ class EmitStatement(Statement):
         name = node['eventCall']['expression']['name']
         super().__init__(node.pop('eventCall'), parent)
         src = [int(i) for i in node['src'].split(':')]
-        self.offset = [src[0], src[0]+src[1]]
+        self.offset = (src[0], src[0]+src[1])
         self.name = name
 
 
