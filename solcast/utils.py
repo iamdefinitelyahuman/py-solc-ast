@@ -38,7 +38,7 @@ def set_dependencies(source_nodes):
             contract.dependencies.add(symbol_map[id_])
 
         # unlinked libraries
-        for node in contract.children(node_type="Identifier"):
+        for node in contract.children(filters={'node_type': "Identifier"}):
             if node.reference in symbol_map and symbol_map[node.reference].type == "library":
                 contract.dependencies.add(symbol_map[node.reference])
 

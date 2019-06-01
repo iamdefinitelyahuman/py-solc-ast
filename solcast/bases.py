@@ -62,7 +62,14 @@ class NodeBase:
     def keys(self):
         return [i for i in dir(self) if not i.startswith('_')]
 
-    def children(self, depth=None, include_self=False, include_parents=True, **filters):
+    def children(
+        self,
+        depth=None,
+        include_self=False,
+        include_parents=True,
+        filters={},
+        exclude={}
+    ):
         '''Get childen nodes of this node.
 
         Arguments:
@@ -70,21 +77,25 @@ class NodeBase:
           include_self: Includes this node in the results.
           include_parents: Includes nodes that match in the results, when they also have
                         child nodes that match.
-
-        Keyword Arguments:
-          **filters: Attribute name:value pairs that nodes must match to return. If left
-                     blank, all nodes are returned.
+          filters: Dictionary of {attribute: value} that children must match. Can also
+                   be given as a list of dicts, children that match one of the dicts
+                   will be returned.
+          exclude: Dictionary of {attribute:value} that children cannot match.
 
         Returns:
             List of node objects.'''
         if depth is not None:
             depth -= 1
             if depth < 0:
-                return [self] if (include_self and _check_filters(self, filters)) else []
+                return [self] if (include_self and _check_filters(self, filters, exclude)) else []
         node_list = []
         for node in self._children():
-            node_list.extend(node.children(depth, True, include_parents, **filters))
-        if include_self and _check_filters(self, filters) and (include_parents or not node_list):
+            node_list.extend(node.children(depth, True, include_parents, filters, exclude))
+        if (
+            include_self and
+            (include_parents or not node_list) and
+            _check_filters(self, filters, exclude)
+        ):
             node_list.insert(0, self)
         return node_list
 
@@ -146,8 +157,20 @@ class ListNodeBase:
         return obj in self._iter_list
 
 
-def _check_filters(node, filters):
+def _check_filters(node, filters, exclude):
+    if type(filters) is dict:
+        return _check_filter(node, filters, exclude)
+    for f in filters:
+        if _check_filter(node, f, exclude):
+            return True
+    return False
+
+
+def _check_filter(node, filters, exclude):
     for key, value in filters.items():
         if not hasattr(node, key) or getattr(node, key) != value:
+            return False
+    for key, value in exclude.items():
+        if hasattr(node, key) and getattr(node, key) == value:
             return False
     return True
