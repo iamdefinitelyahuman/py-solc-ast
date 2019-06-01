@@ -22,7 +22,7 @@ class IfStatement(Statement, ListNodeBase):
         for key in ['trueBody', 'falseBody']:
             body = get_object(node.pop(key), self) if node[key] else []
             setattr(self, key[:-4], body if type(body) is list else [body])
-        ListNodeBase.__init__(self, [self.true, self.false])
+        ListNodeBase.__init__(self, self.true + self.false)
 
 
 class WhileStatement(Statement):
