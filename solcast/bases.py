@@ -13,7 +13,7 @@ class NodeBase:
         src = [int(i) for i in node['src'].split(':')]
         self.offset = (src[0], src[0]+src[1])
         self.contract_id = src[2]
-        self.parent = parent
+        self._parent = parent
         self.depth = parent.depth + 1 if parent is not None else 0
 
     def __hash__(self):
@@ -121,20 +121,62 @@ class NodeBase:
                 "No node with {}offset match of {}".format("exact " if exact else "", offset)
             )
 
-    def root(self, depth=1):
-        '''Returns the parent node object at the given depth.'''
-        if depth >= self.depth:
-            raise ValueError("Given depth exceeds object depth")
-        parent = self.parent
+    def parents(self, depth=-1, filters={}):
+        '''Get parent nodes of this node.
+
+        Arguments:
+            depth: Depth limit. If given as a negative value, it will be subtracted
+                   from this object's depth.
+            filters: Dictionary of {attribute: value} that parents must match. Can also
+                   be given as a list of dicts, parents that match one of the dicts
+                   will be returned.
+
+        Returns: list of nodes'''
+        if depth < 0:
+            depth = self.depth + depth
+        if depth >= self.depth or depth < 0:
+            raise IndexError("Given depth exceeds node depth")
+        node_list = []
+        parent = self
+        while True:
+            parent = parent._parent
+            if not filters or _check_filters(parent, filters, {}):
+                node_list.append(parent)
+            if parent.depth == depth:
+                return node_list
+
+    def parent(self, depth=-1, filters={}):
+        '''Get a parent node of this node.
+
+        Arguments:
+            depth: Depth limit. If given as a negative value, it will be subtracted
+                   from this object's depth. The parent at this exact depth is returned.
+            filters: Dictionary of {attribute: value} that the parent must match. Can also
+                   be given as a list of dicts, a parent that matches one of the dicts
+                   will be returned.
+
+        If a filter value is given, will return the first parent that meets the filters
+        up to the given depth. If none is found, returns None.
+
+        If no filter is given, returns the parent at the given depth.'''
+        if depth < 0:
+            depth = self.depth + depth
+        if depth >= self.depth or depth < 0:
+            raise IndexError("Given depth exceeds node depth")
+        parent = self
         while parent.depth > depth:
-            parent = parent.parent
-        return parent
+            parent = parent._parent
+            if parent.depth == depth and not filters:
+                return parent
+            if filters and _check_filters(parent, filters, {}):
+                return parent
+        return None
 
     def is_child_of(self, node):
-        '''Checks if the given node object is a child of this object.'''
+        '''Checks if this object is a child of the given node object.'''
         if node.depth >= self.depth:
             return False
-        return self.root(node.depth) == node
+        return self.parent(node.depth) == node
 
 
 class ListNodeBase:

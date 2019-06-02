@@ -42,4 +42,4 @@ class FunctionDefinition(Definition, ListNodeBase):
                 self.name = "<constructor>"
             else:
                 self.name = "<fallback>"
-        self.full_name = "{0.parent.name}.{0.name}".format(self)
+        self.full_name = "{0._parent.name}.{0.name}".format(self)
