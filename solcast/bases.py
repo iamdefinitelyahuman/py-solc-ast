@@ -99,8 +99,8 @@ class NodeBase:
             node_list.insert(0, self)
         return node_list
 
-    def child_by_offset(self, offset, exact=False):
-        '''Get an immediate child node based on a source offset.
+    def child_by_offset(self, offset, depth=1, exact=False):
+        '''Get a child node based on a source offset.
 
         Arguments:
             offset: A source offset as (start, stop)
@@ -111,8 +111,11 @@ class NodeBase:
             Node object.'''
         try:
             if exact:
-                return next(i for i in self._children() if tuple(offset) == i.offset)
-            return next(i for i in self._children() if is_inside_offset(offset, i.offset))
+                child = next(i for i in self._children() if tuple(offset) == i.offset)
+            child = next(i for i in self._children() if is_inside_offset(offset, i.offset))
+            if depth > 1:
+                return child.child_by_offset(offset, depth-1, exact)
+            return child
         except StopIteration:
             raise KeyError(
                 "No node with {}offset match of {}".format("exact " if exact else "", offset)
