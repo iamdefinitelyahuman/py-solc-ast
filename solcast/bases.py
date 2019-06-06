@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 
+import functools
+
 from .utils import is_inside_offset
 
 
@@ -67,6 +69,9 @@ class NodeBase:
         depth=None,
         include_self=False,
         include_parents=True,
+        include_children=True,
+        inner_offset=None,
+        outer_offset=None,
         filters={},
         exclude={}
     ):
@@ -77,6 +82,11 @@ class NodeBase:
           include_self: Includes this node in the results.
           include_parents: Includes nodes that match in the results, when they also have
                         child nodes that match.
+          include_children: If True, as soon as a match is found it's children will not
+                            be included in the search.
+          inner_offset: Only match nodes with a source offset that contains this offset.
+          outer_offset: Only match nodes when their source offset is contained inside
+                        this source offset.
           filters: Dictionary of {attribute: value} that children must match. Can also
                    be given as a list of dicts, children that match one of the dicts
                    will be returned.
@@ -84,42 +94,19 @@ class NodeBase:
 
         Returns:
             List of node objects.'''
-        if depth is not None:
-            depth -= 1
-            if depth < 0:
-                return [self] if (include_self and _check_filters(self, filters, exclude)) else []
-        node_list = []
-        for node in self._children():
-            node_list.extend(node.children(depth, True, include_parents, filters, exclude))
-        if (
-            include_self and
-            (include_parents or not node_list) and
-            _check_filters(self, filters, exclude)
-        ):
-            node_list.insert(0, self)
-        return node_list
-
-    def child_by_offset(self, offset, depth=1, exact=False):
-        '''Get a child node based on a source offset.
-
-        Arguments:
-            offset: A source offset as (start, stop)
-            exact: If False, returns a child where the given offset is contained
-                   inside the child's offset. If True, only returns an exact match.
-
-        Returns:
-            Node object.'''
-        try:
-            if exact:
-                child = next(i for i in self._children() if tuple(offset) == i.offset)
-            child = next(i for i in self._children() if is_inside_offset(offset, i.offset))
-            if depth > 1:
-                return child.child_by_offset(offset, depth-1, exact)
-            return child
-        except StopIteration:
-            raise KeyError(
-                "No node with {}offset match of {}".format("exact " if exact else "", offset)
-            )
+        if type(filters) is dict:
+            filters = [filters]
+        filter_fn = functools.partial(_check_filters, inner_offset, outer_offset, filters, exclude)
+        find_fn = functools.partial(
+            _find_children,
+            filter_fn,
+            include_parents,
+            include_children
+        )
+        result = find_fn(find_fn, depth, self)
+        if include_self or not result or result[0] != self:
+            return result
+        return result[1:]
 
     def parents(self, depth=-1, filters={}):
         '''Get parent nodes of this node.
@@ -127,11 +114,11 @@ class NodeBase:
         Arguments:
             depth: Depth limit. If given as a negative value, it will be subtracted
                    from this object's depth.
-            filters: Dictionary of {attribute: value} that parents must match. Can also
-                   be given as a list of dicts, parents that match one of the dicts
-                   will be returned.
+            filters: Dictionary of {attribute: value} that parents must match.
 
         Returns: list of nodes'''
+        if type(filters) is not dict:
+            raise TypeError("Filters must be a dict")
         if depth < 0:
             depth = self.depth + depth
         if depth >= self.depth or depth < 0:
@@ -140,7 +127,7 @@ class NodeBase:
         parent = self
         while True:
             parent = parent._parent
-            if not filters or _check_filters(parent, filters, {}):
+            if not filters or _check_filter(parent, filters, {}):
                 node_list.append(parent)
             if parent.depth == depth:
                 return node_list
@@ -151,14 +138,14 @@ class NodeBase:
         Arguments:
             depth: Depth limit. If given as a negative value, it will be subtracted
                    from this object's depth. The parent at this exact depth is returned.
-            filters: Dictionary of {attribute: value} that the parent must match. Can also
-                   be given as a list of dicts, a parent that matches one of the dicts
-                   will be returned.
+            filters: Dictionary of {attribute: value} that the parent must match.
 
         If a filter value is given, will return the first parent that meets the filters
         up to the given depth. If none is found, returns None.
 
         If no filter is given, returns the parent at the given depth.'''
+        if type(filters) is not dict:
+            raise TypeError("Filters must be a dict")
         if depth < 0:
             depth = self.depth + depth
         if depth >= self.depth or depth < 0:
@@ -168,7 +155,7 @@ class NodeBase:
             parent = parent._parent
             if parent.depth == depth and not filters:
                 return parent
-            if filters and _check_filters(parent, filters, {}):
+            if filters and _check_filter(parent, filters, {}):
                 return parent
         return None
 
@@ -177,6 +164,11 @@ class NodeBase:
         if node.depth >= self.depth:
             return False
         return self.parent(node.depth) == node
+
+    def is_parent_of(self, node):
+        if node.depth <= self.depth:
+            return False
+        return node.parent(self.depth) == self
 
 
 class ListNodeBase:
@@ -202,9 +194,11 @@ class ListNodeBase:
         return obj in self._iter_list
 
 
-def _check_filters(node, filters, exclude):
-    if type(filters) is dict:
-        return _check_filter(node, filters, exclude)
+def _check_filters(inner_offset, outer_offset, filters, exclude, node):
+    if inner_offset and not is_inside_offset(inner_offset, node.offset):
+        return False
+    if outer_offset and not is_inside_offset(node.offset, outer_offset):
+        return False
     for f in filters:
         if _check_filter(node, f, exclude):
             return True
@@ -213,9 +207,24 @@ def _check_filters(node, filters, exclude):
 
 def _check_filter(node, filters, exclude):
     for key, value in filters.items():
-        if not hasattr(node, key) or getattr(node, key) != value:
+        if getattr(node, key, not value) != value:
             return False
     for key, value in exclude.items():
-        if hasattr(node, key) and getattr(node, key) == value:
+        if getattr(node, key, not value) == value:
             return False
     return True
+
+
+def _find_children(filter_fn, include_parents, include_children, find_fn, depth, node):
+    if depth is not None:
+        depth -= 1
+        if depth < 0:
+            return [node] if filter_fn(node) else []
+    if not include_children and filter_fn(node):
+        return [node]
+    node_list = []
+    for child in node._children():
+        node_list.extend(find_fn(find_fn, depth, child))
+    if (include_parents or not node_list) and filter_fn(node):
+        node_list.insert(0, node)
+    return node_list
