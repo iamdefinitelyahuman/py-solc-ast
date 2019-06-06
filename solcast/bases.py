@@ -15,8 +15,17 @@ class NodeBase:
         src = [int(i) for i in node['src'].split(':')]
         self.offset = (src[0], src[0]+src[1])
         self.contract_id = src[2]
-        self._parent = parent
         self.depth = parent.depth + 1 if parent is not None else 0
+        self._parent = parent
+        self._children = set()
+
+    def __setattr__(self, attr, obj):
+        # ensure that any child nodes are added to _children
+        if hasattr(obj, 'node_type') and obj.depth == self.depth + 1:
+            self._children.add(obj)
+        elif type(obj) is list and obj and hasattr(obj[0], 'node_type'):
+            self._children.update(i for i in obj if i.depth == self.depth + 1)
+        super().__setattr__(attr, obj)
 
     def __hash__(self):
         return hash("{0.node_type}{0.depth}{0.offset}{0.name}".format(self))
@@ -51,15 +60,6 @@ class NodeBase:
             k for k, v in self._node.items() if type(v) is dict and 'nodeType' in v or
             type(v) is list and v and type(v[0]) is dict and 'nodeType' in v[0]
         ]
-
-    def _children(self):
-        node_list = []
-        for obj in [getattr(self, i) for i in self.keys() if i != "parent"]:
-            if type(obj) is list and obj and hasattr(obj[0], 'node_type'):
-                node_list.extend([i for i in obj if i.depth == self.depth + 1])
-            elif hasattr(obj, 'node_type') and obj.depth == self.depth + 1:
-                node_list.append(obj)
-        return node_list
 
     def keys(self):
         return [i for i in dir(self) if not i.startswith('_')]
@@ -223,7 +223,7 @@ def _find_children(filter_fn, include_parents, include_children, find_fn, depth,
     if not include_children and filter_fn(node):
         return [node]
     node_list = []
-    for child in node._children():
+    for child in node._children:
         node_list.extend(find_fn(find_fn, depth, child))
     if (include_parents or not node_list) and filter_fn(node):
         node_list.insert(0, node)
