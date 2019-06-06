@@ -62,18 +62,22 @@ From the initial objects, you can explore the AST:
 [<ExpressionStatement.FunctionCall 'require(balances[msg.sender] >= _value, Insufficient Balance)'>, <ExpressionStatement.Assignment iterable uint256 'balances[msg.sender] = balances[msg.sender].sub(_value)'>, <ExpressionStatement.Assignment iterable uint256 'balances[_to] = balances[_to].add(_value)'>, <EmitStatement.FunctionCall 'Transfer'>, <Return.Literal bool 'true'>]
 ```
 
-Use the ``children`` method to view and filter child nodes:
+Use the ``Node.children`` and ``Node.parents`` methods to access and filter related nodes:
 
 ```python
->>> s['Token']['transfer'].children(depth=1)
+>>> node = s['Token']['transfer']
+
+>>> node.children(depth=1)
 [<ExpressionStatement.FunctionCall 'require(balances[msg.sender] >= _value, Insufficient Balance)'>, <ExpressionStatement.Assignment iterable uint256 'balances[msg.sender] = balances[msg.sender].sub(_value)'>, <ExpressionStatement.Assignment iterable uint256 'balances[_to] = balances[_to].add(_value)'>, <EmitStatement.FunctionCall 'Transfer'>, <Return.Literal bool 'true'>]
 
->>> s['Token']['transfer'].children(include_parents=False)
-[<Identifier 'balances'>, <Identifier 'msg'>, <Identifier '_value'>, <Literal string 'Insufficient Balance'>, <Identifier 'require'>, <Identifier 'balances'>, <Identifier 'msg'>, <Identifier '_value'>, <Identifier 'balances'>, <Identifier 'msg'>, <Identifier 'balances'>, <Identifier '_to'>, <Identifier '_value'>, <Identifier 'balances'>, <Identifier '_to'>, <EmitStatement.FunctionCall 'Transfer'>, <Return.Literal bool 'true'>]
-
->>> s['Token']['transfer'].children(node_type="FunctionCall", name="require")
+>>> node.children(include_children=False, filters={'node_type': "FunctionCall", 'name': "require"})
 [<ExpressionStatement.FunctionCall 'require(balances[msg.sender] >= _value, Insufficient Balance)'>]
+
+>>> node.parents()
+[<ContractDefinition iterable 'Token'>, <SourceUnit iterable object 'contracts/Token.sol'>]
 ```
+
+Calling ``help`` on either of these methods provides a more detailed explanation of their functionality.
 
 ## Development
 
