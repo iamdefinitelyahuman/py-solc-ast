@@ -22,8 +22,18 @@ class ContractDefinition(Definition, ListNodeBase):
             i['typeName']['name'],
             i['libraryName']['name']
         ) for i in node['nodes'] if i['nodeType'] == "UsingForDirective")
+        self.modifiers = get_node_objects(node, "ModifierDefinition", ModifierDefinition, self)
         self.functions = get_node_objects(node, "FunctionDefinition", FunctionDefinition, self)
         ListNodeBase.__init__(self, self.functions)
+
+
+class ModifierDefinition(Definition, ListNodeBase):
+
+    def __init__(self, node, parent):
+        super().__init__(node, parent)
+        self.statements = statements.get_object(node.pop('body'), self)
+        ListNodeBase.__init__(self, self.statements)
+        self.full_name = "{0._parent.name}.{0.name}".format(self)
 
 
 class FunctionDefinition(Definition, ListNodeBase):
@@ -35,6 +45,7 @@ class FunctionDefinition(Definition, ListNodeBase):
         else:
             self.statements = []
         ListNodeBase.__init__(self, self.statements)
+        self.modifiers = [i['modifierName']['name'] for i in node.pop('modifiers')]
         if not self.name:
             if 'kind' in node and node['kind'] != "function":
                 self.name = '<{}>'.format(node['kind'])
