@@ -78,6 +78,8 @@ class EmitStatement(Statement):
 
 
 def get_object(node, parent):
+    if node is None:
+        return None
     if node['nodeType'] in ("ExpressionStatement", "Return"):
         class_ = type(
             node['nodeType'],
