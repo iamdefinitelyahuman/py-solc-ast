@@ -7,7 +7,8 @@ from .bases import NodeBase, ListNodeBase
 from .definitions import ContractDefinition
 from .utils import (
     get_node_objects,
-    get_symbol_map
+    get_symbol_map,
+    get_type_name
 )
 
 
@@ -67,7 +68,7 @@ def set_dependencies(source_nodes):
         for node in [i for i in contract._node['nodes'] if i['nodeType'] == "UsingForDirective"]:
             contract._node['nodes'].remove(node)
             id_ = node['libraryName']['referencedDeclaration']
-            contract.libraries[node['typeName']['typeDescriptions']['typeString']] = symbol_map[id_]
+            contract.libraries[get_type_name(node['typeName'])] = symbol_map[id_]
             contract.dependencies.add(symbol_map[id_])
 
         # unlinked libraries

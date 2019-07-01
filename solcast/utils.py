@@ -37,3 +37,13 @@ def is_inside_offset(inner, outer):
 
     Returns: bool'''
     return outer[0] <= inner[0] <= inner[1] <= outer[1]
+
+
+def get_type_name(node):
+    if node is None:
+        return None
+    if 'name' in node:
+        return node['name']
+    if node['typeDescriptions']:
+        return node['typeDescriptions']['typeString']
+    return None

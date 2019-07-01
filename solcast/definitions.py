@@ -2,7 +2,7 @@
 
 from .bases import NodeBase, ListNodeBase
 from . import statements
-from .utils import get_node_objects
+from .utils import get_node_objects, get_type_name
 
 
 class Definition(NodeBase):
@@ -19,7 +19,7 @@ class ContractDefinition(Definition, ListNodeBase):
         super().__init__(node, parent)
         self.type = node['contractKind']
         self.libraries = dict((
-            i['typeName']['typeDescriptions']['typeString'],
+            get_type_name(i['typeName']),
             i['libraryName']['name']
         ) for i in node['nodes'] if i['nodeType'] == "UsingForDirective")
         self.modifiers = get_node_objects(node, "ModifierDefinition", ModifierDefinition, self)
