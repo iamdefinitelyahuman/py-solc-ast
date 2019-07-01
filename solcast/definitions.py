@@ -19,7 +19,7 @@ class ContractDefinition(Definition, ListNodeBase):
         super().__init__(node, parent)
         self.type = node['contractKind']
         self.libraries = dict((
-            i['typeName']['name'],
+            i['typeName']['typeDescriptions']['typeString'],
             i['libraryName']['name']
         ) for i in node['nodes'] if i['nodeType'] == "UsingForDirective")
         self.modifiers = get_node_objects(node, "ModifierDefinition", ModifierDefinition, self)

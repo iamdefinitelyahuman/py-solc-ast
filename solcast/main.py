@@ -67,7 +67,7 @@ def set_dependencies(source_nodes):
         for node in [i for i in contract._node['nodes'] if i['nodeType'] == "UsingForDirective"]:
             contract._node['nodes'].remove(node)
             id_ = node['libraryName']['referencedDeclaration']
-            contract.libraries[node['typeName']['name']] = symbol_map[id_]
+            contract.libraries[node['typeName']['typeDescriptions']['typeString']] = symbol_map[id_]
             contract.dependencies.add(symbol_map[id_])
 
         # unlinked libraries
