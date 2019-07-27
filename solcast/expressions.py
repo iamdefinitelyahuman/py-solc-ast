@@ -183,7 +183,8 @@ class Conditional(NodeBase):
 
 
 def get_object(node, parent):
-    return get_class(node)(node, parent)
+    if node is not None:
+        return get_class(node)(node, parent)
 
 
 def get_objects(node_list, parent):
