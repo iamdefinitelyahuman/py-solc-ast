@@ -2,6 +2,8 @@
 
 import functools
 
+from .grammar import BASE_NODE_TYPES
+
 
 class NodeBase:
     def __init__(self, ast, parent):
@@ -30,6 +32,10 @@ class NodeBase:
                 self._children.update(i for i in items if isinstance(i, NodeBase))
             else:
                 setattr(self, key, value)
+
+        base_type = next((k for k, v in BASE_NODE_TYPES.items() if self.nodeType in v), None)
+        if base_type:
+            self.baseNodeType = base_type
 
     def __hash__(self):
         return hash(f"{self.nodeType}{self.depth}{self.offset}")
