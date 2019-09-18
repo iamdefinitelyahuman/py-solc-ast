@@ -2,64 +2,59 @@
 
 import functools
 
-from .utils import is_inside_offset
-
 
 class NodeBase:
 
-    def __init__(self, node, parent):
-        self._node = node
-        self.node_type = node['nodeType']
-        self.name = node['name'] if 'name' in node else None
-        self.value = node['value'] if 'value' in node else None
-        src = [int(i) for i in node['src'].split(':')]
-        self.offset = (src[0], src[0]+src[1])
-        self.contract_id = src[2]
+    def __init__(self, ast, parent):
         self.depth = parent.depth + 1 if parent is not None else 0
         self._parent = parent
         self._children = set()
-
-    def __setattr__(self, attr, obj):
-        # ensure that any child nodes are added to _children
-        if hasattr(obj, 'node_type') and obj.depth == self.depth + 1:
-            self._children.add(obj)
-        elif type(obj) is list and obj and hasattr(obj[0], 'node_type'):
-            self._children.update(i for i in obj if i.depth == self.depth + 1)
-        super().__setattr__(attr, obj)
+        src = ast['src']
+        self.offset = (src[0], src[0]+src[1])
+        for key, value in ast.items():
+            if isinstance(value, dict) and value.get('nodeType') == "Block":
+                value = value['statements']
+            elif key == "body" and not value:
+                value = []
+            if isinstance(value, dict):
+                item = node_class_factory(value, self)
+                if isinstance(item, NodeBase):
+                    self._children.add(item)
+                setattr(self, key, item)
+            elif isinstance(value, list):
+                items = [node_class_factory(i, self) for i in value]
+                setattr(self, key, items)
+                if key in ('body', 'nodes'):
+                    self.nodes = getattr(self, key)
+                self._children.update(i for i in items if isinstance(i, NodeBase))
+            else:
+                setattr(self, key, value)
 
     def __hash__(self):
-        return hash("{0.node_type}{0.depth}{0.offset}{0.name}".format(self))
+        return hash(f"{self.nodeType}{self.depth}{self.offset}")
 
     def __repr__(self):
-        name = type(self).__name__
-        repr_str = "<" + name
-        if self.node_type != name:
-            repr_str += "." + self.node_type
-        if hasattr(self, '_iter_list'):
+        repr_str = f"<{self.nodeType}"
+        if hasattr(self, 'nodes'):
             repr_str += " iterable"
         if hasattr(self, 'type'):
-            if type(self.type)is str:
-                repr_str += " " + self.type
+            if type(self.type) is str:
+                repr_str += f" {self.type}"
             else:
-                repr_str += " " + self.type._display()
+                repr_str += f" {self.type._display()}"
         if self._display():
-            repr_str += " '" + self._display() + "'"
+            repr_str += f" '{self._display()}'"
         else:
             repr_str += " object"
-        return repr_str+">"
+        return f"{repr_str}>"
 
     def _display(self):
-        if self.name and self.value:
-            return "'{}' = {}".format(self.name, self.value)
-        return self.name or self.value or ""
-
-    def _unimplemented(self):
-        '''Returns a list of keys that lead to child nodes that have not yet
-        been implemented within py-solc-ast.'''
-        return [
-            k for k, v in self._node.items() if type(v) is dict and 'nodeType' in v or
-            type(v) is list and v and type(v[0]) is dict and 'nodeType' in v[0]
-        ]
+        if hasattr(self, 'name') and hasattr(self, 'value'):
+            return "{} = {}".format(self.name, self.value)
+        for attr in ('name', 'value', 'absolutePath'):
+            if hasattr(self, attr):
+                return f"{getattr(self, attr)}"
+        return ""
 
     def keys(self):
         return [i for i in dir(self) if not i.startswith('_')]
@@ -171,27 +166,32 @@ class NodeBase:
         return node.parent(self.depth) == self
 
 
-class ListNodeBase:
-
-    def __init__(self, iter_list):
-        self._iter_list = iter_list
+class IterableNodeBase(NodeBase):
 
     def __getitem__(self, key):
         if type(key) is str:
             try:
-                return next(i for i in self._iter_list if i.name == key)
+                return next(i for i in self.nodes if getattr(i, 'name', None) == key)
             except StopIteration:
                 raise KeyError(key)
-        return self._iter_list[key]
+        return self.nodes[key]
 
     def __iter__(self):
-        return iter(self._iter_list)
+        return iter(self.nodes)
 
     def __len__(self):
-        return len(self._iter_list)
+        return len(self.nodes)
 
     def __contains__(self, obj):
-        return obj in self._iter_list
+        return obj in self.nodes
+
+
+def node_class_factory(ast, parent):
+    if not isinstance(ast, dict) or 'nodeType' not in ast:
+        return ast
+    name = ast['nodeType']
+    base_class = IterableNodeBase if ('nodes' in ast or 'body' in ast) else NodeBase
+    return type(name, (base_class,), {})(ast, parent)
 
 
 def _check_filters(inner_offset, outer_offset, filters, exclude, node):
@@ -228,3 +228,14 @@ def _find_children(filter_fn, include_parents, include_children, find_fn, depth,
     if (include_parents or not node_list) and filter_fn(node):
         node_list.insert(0, node)
     return node_list
+
+
+def is_inside_offset(inner, outer):
+    '''Checks if the first offset is contained in the second offset
+
+    Args:
+        inner: inner offset tuple
+        outer: outer offset tuple
+
+    Returns: bool'''
+    return outer[0] <= inner[0] <= inner[1] <= outer[1]
