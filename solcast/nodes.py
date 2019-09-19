@@ -198,8 +198,6 @@ class IterableNodeBase(NodeBase):
 def node_class_factory(ast, parent):
     if not isinstance(ast, dict) or "nodeType" not in ast:
         return ast
-    if ast["nodeType"] == "ExpressionStatement":
-        ast = ast["expression"]
     if "body" in ast:
         ast["nodes"] = ast.pop("body")
     base_class = IterableNodeBase if "nodes" in ast else NodeBase
