@@ -60,17 +60,14 @@ Each node has the following attributes:
 
 ```
 
-Fields mostly follow the expected [AST grammar](https://solidity.readthedocs.io/en/latest/miscellaneous.html#language-grammar), with the following differences:
-
-* `Block` nodes are omitted, the body of each `Block` is available within it's parent as `nodes`.
-* `ExpressionStatement` nodes are replaced with their underlying `Expression`
+Fields mostly follow the expected [AST grammar](https://solidity.readthedocs.io/en/latest/miscellaneous.html#language-grammar). One notable difference: `Block` nodes are omitted and the body of each `Block` is available within it's parent as the attribute `nodes`. Nodes containing a body are iterable and can be accessed with list-like syntax. Additionally, any child node with a `name` field is accessible using dict-like syntax.
 
 The following additional fields are also available:
 
 * Most nodes have a `baseNodeType` field as defined in [grammar.py](solcast/grammar.py)
 * `ContractDefinition` nodes have `dependencies` and `libraries` fields that point to related `ContractDefition` nodes
 
-When a node has a `nodes` field, it is iterable and can be accessed with list-like syntax. Additionally, any child node with a `name` field is accessible using dict-like syntax.
+When a node has a `nodes` field,
 
 Some Examples:
 

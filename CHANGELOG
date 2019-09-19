@@ -1,3 +1,8 @@
+1.0.1
+-----
+
+ - Do not reduce ExpressionStatement to Expression
+
 1.0.0
 -----
 
