@@ -6,6 +6,15 @@ from .grammar import BASE_NODE_TYPES
 
 
 class NodeBase:
+    """Represents a node within the solidity AST.
+
+    Attributes:
+        depth: Number of nodes between this node and the SourceUnit
+        offset: Absolute source offsets as a (start, stop) tuple
+        contract_id: Contract ID as given by the standard compiler JSON
+        fields: List of attributes for this node
+    """
+
     def __init__(self, ast, parent):
         self.depth = parent.depth + 1 if parent is not None else 0
         self._parent = parent
@@ -13,6 +22,7 @@ class NodeBase:
         src = [int(i) for i in ast["src"].split(":")]
         self.offset = (src[0], src[0] + src[1])
         self.contract_id = src[2]
+        self.fields = sorted(ast.keys())
 
         for key, value in ast.items():
             if isinstance(value, dict) and value.get("nodeType") == "Block":
@@ -27,15 +37,9 @@ class NodeBase:
             elif isinstance(value, list):
                 items = [node_class_factory(i, self) for i in value]
                 setattr(self, key, items)
-                if key in ("body", "nodes"):
-                    self.nodes = getattr(self, key)
                 self._children.update(i for i in items if isinstance(i, NodeBase))
             else:
                 setattr(self, key, value)
-
-        base_type = next((k for k, v in BASE_NODE_TYPES.items() if self.nodeType in v), None)
-        if base_type:
-            self.baseNodeType = base_type
 
     def __hash__(self):
         return hash(f"{self.nodeType}{self.depth}{self.offset}")
@@ -62,9 +66,6 @@ class NodeBase:
             if hasattr(self, attr):
                 return f"{getattr(self, attr)}"
         return ""
-
-    def keys(self):
-        return [i for i in dir(self) if not i.startswith("_")]
 
     def children(
         self,
@@ -169,6 +170,7 @@ class NodeBase:
         return self.parent(node.depth) == node
 
     def is_parent_of(self, node):
+        """Checks if this object is a parent of the given node object."""
         if node.depth <= self.depth:
             return False
         return node.parent(self.depth) == self
@@ -196,9 +198,15 @@ class IterableNodeBase(NodeBase):
 def node_class_factory(ast, parent):
     if not isinstance(ast, dict) or "nodeType" not in ast:
         return ast
-    name = ast["nodeType"]
-    base_class = IterableNodeBase if ("nodes" in ast or "body" in ast) else NodeBase
-    return type(name, (base_class,), {})(ast, parent)
+    if ast["nodeType"] == "ExpressionStatement":
+        ast = ast["expression"]
+    if "body" in ast:
+        ast["nodes"] = ast.pop("body")
+    base_class = IterableNodeBase if "nodes" in ast else NodeBase
+    base_type = next((k for k, v in BASE_NODE_TYPES.items() if ast["nodeType"] in v), None)
+    if base_type:
+        ast["baseNodeType"] = base_type
+    return type(ast["nodeType"], (base_class,), {})(ast, parent)
 
 
 def _check_filters(required_offset, offset_limits, filters, exclude, node):
