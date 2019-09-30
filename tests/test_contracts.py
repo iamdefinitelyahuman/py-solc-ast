@@ -1,18 +1,13 @@
 #!/usr/bin/python3
 
+from pathlib import Path
+
+import pytest
 import solcast
 
-# Check that loading the open zeppelin contract set (as of July 1, 2019) does not raise
-# https://github.com/OpenZeppelin/openzeppelin-contracts
+JSON_PATHS = list(Path("tests/compiled").glob("*.json"))
 
 
-def test_open_zeppelin():
-    solcast.from_standard_output_json("tests/open-zeppelin.json")
-
-
-# Check that loading AragonOS contract set (as of July 28, 2019) does not raise
-# https://github.com/aragon/aragonOS
-
-
-def test_aragon():
-    solcast.from_standard_output_json("tests/aragon.json")
+@pytest.mark.parametrize("path", JSON_PATHS)
+def test_solcast(path):
+    solcast.from_standard_output_json(path)
