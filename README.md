@@ -38,6 +38,15 @@ Next, import ``solcast`` and initialize using ``from_standard_output_json`` or `
 [<SourceUnit iterable 'contracts/Token.sol'>, <SourceUnit iterable 'contracts/SafeMath.sol'>]
 ```
 
+You can also generate a single ``SourceUnit`` directly from that source's AST:
+
+```python
+>>> import solcast
+>>> node = solcast.from_ast(output_json["sources"]["contracts/Token.sol"]["ast"])
+>>> node
+<SourceUnit iterable 'contracts/Token.sol'>
+```
+
 ### Interacting with Nodes
 
 Each node has the following attributes:
@@ -66,8 +75,6 @@ The following additional fields are also available:
 
 * Most nodes have a `baseNodeType` field as defined in [grammar.py](solcast/grammar.py)
 * `ContractDefinition` nodes have `dependencies` and `libraries` fields that point to related `ContractDefition` nodes
-
-When a node has a `nodes` field,
 
 Some Examples:
 

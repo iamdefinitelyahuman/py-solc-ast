@@ -1,3 +1,9 @@
+1.1.0
+-----
+
+ - Ensure no mutation of original AST when generating node objects
+ - Add from_ast method to generate a single SourceUnit
+
 1.0.2
 -----
 
