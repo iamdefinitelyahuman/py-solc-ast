@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import functools
+from copy import deepcopy
 
 from .grammar import BASE_NODE_TYPES
 
@@ -196,6 +197,7 @@ class IterableNodeBase(NodeBase):
 
 
 def node_class_factory(ast, parent):
+    ast = deepcopy(ast)
     if not isinstance(ast, dict) or "nodeType" not in ast:
         return ast
     if "body" in ast:
