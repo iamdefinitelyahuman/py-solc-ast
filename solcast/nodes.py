@@ -62,7 +62,7 @@ class NodeBase:
 
     def _display(self):
         if hasattr(self, "name") and hasattr(self, "value"):
-            return "{} = {}".format(self.name, self.value)
+            return f"{self.name} = {self.value}"
         for attr in ("name", "value", "absolutePath"):
             if hasattr(self, attr):
                 return f"{getattr(self, attr)}"
