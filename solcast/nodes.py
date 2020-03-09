@@ -62,7 +62,7 @@ class NodeBase:
 
     def _display(self):
         if hasattr(self, "name") and hasattr(self, "value"):
-            return "{} = {}".format(self.name, self.value)
+            return f"{self.name} = {self.value}"
         for attr in ("name", "value", "absolutePath"):
             if hasattr(self, attr):
                 return f"{getattr(self, attr)}"
@@ -176,6 +176,24 @@ class NodeBase:
             return False
         return node.parent(self.depth) == self
 
+    def get(self, key, default=None):
+        """
+        Gets an attribute from this node, if that attribute exists.
+
+        Arguments:
+            key: Field name to return. May contain decimals to return a value
+                 from a child node.
+            default: Default value to return.
+
+        Returns: Field value if it exists. Default value if not.
+        """
+        if key is None:
+            raise TypeError("Cannot match against None")
+        obj = self
+        for k in key.split("."):
+            obj = getattr(obj, k, None)
+        return obj or default
+
 
 class IterableNodeBase(NodeBase):
     def __getitem__(self, key):
@@ -222,23 +240,12 @@ def _check_filters(required_offset, offset_limits, filters, exclude, node):
 
 def _check_filter(node, filters, exclude):
     for key, value in filters.items():
-        if _recursive_getattr(node, key) != value:
+        if node.get(key) != value:
             return False
     for key, value in exclude.items():
-        if _recursive_getattr(node, key) == value:
+        if node.get(key) == value:
             return False
     return True
-
-
-def _recursive_getattr(obj, key):
-    if key is None:
-        raise TypeError("Cannot match against None")
-    for k in key.split("."):
-        if isinstance(obj, dict):
-            obj = obj.get(k)
-        else:
-            obj = getattr(obj, k, None)
-    return obj
 
 
 def _find_children(filter_fn, include_parents, include_children, find_fn, depth, node):
