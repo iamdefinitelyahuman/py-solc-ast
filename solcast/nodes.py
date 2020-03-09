@@ -191,7 +191,10 @@ class NodeBase:
             raise TypeError("Cannot match against None")
         obj = self
         for k in key.split("."):
-            obj = getattr(obj, k, None)
+            if isinstance(obj, dict):
+                obj = obj.get(k)
+            else:
+                obj = getattr(obj, k, None)
         return obj or default
 
 
