@@ -27,9 +27,9 @@ def set_dependencies(source_nodes):
 
         # using .. for libraries
         for node in contract.children(filters={"nodeType": "UsingForDirective"}):
-            id_ = node.libraryName.referencedDeclaration
-            contract.libraries[_get_type_name(node.typeName)] = symbol_map[id_]
-            contract.dependencies.add(symbol_map[id_])
+            ref = node.libraryName.referencedDeclaration
+            contract.libraries[_get_type_name(node.typeName)] = symbol_map[ref]
+            contract.dependencies.add(symbol_map[ref])
 
         # unlinked libraries
         for node in contract.children(filters={"nodeType": "Identifier"}):
@@ -39,13 +39,18 @@ def set_dependencies(source_nodes):
 
     # add recursive dependencies
     for contract in contract_list:
-        for node in contract.dependencies.copy():
-            contract.dependencies |= node.dependencies
+        _add_dependencies(contract)
 
     # convert dependency sets to lists
     for contract in contract_list:
         contract.dependencies = sorted(contract.dependencies, key=lambda k: k.name)
     return source_nodes
+
+
+def _add_dependencies(contract):
+    for node in contract.dependencies.copy():
+        contract.dependencies |= _add_dependencies(node)
+    return contract.dependencies.copy()
 
 
 def get_symbol_map(source_nodes):
