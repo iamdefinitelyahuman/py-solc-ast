@@ -1,3 +1,8 @@
+1.2.2
+-----
+
+ - Bugfix: missing dependencies for complex inheritance trees
+
 1.2.1
 -----
 
