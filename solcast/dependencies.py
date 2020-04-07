@@ -37,6 +37,9 @@ def set_dependencies(source_nodes):
             if ref in symbol_map and symbol_map[ref].contractKind == "library":
                 contract.dependencies.add(symbol_map[ref])
 
+        # prevent recursion errors from self-dependency
+        contract.dependencies.discard(contract)
+
     # add recursive dependencies
     for contract in contract_list:
         _add_dependencies(contract)
