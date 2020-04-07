@@ -1,3 +1,8 @@
+1.2.3
+-----
+
+ - Bugfix: recursion error when a contract has itself as a dependency
+
 1.2.2
 -----
 
