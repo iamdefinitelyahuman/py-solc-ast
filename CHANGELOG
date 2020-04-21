@@ -1,3 +1,8 @@
+1.2.4
+-----
+
+ - Bugfix: recursion errors with more complex circular dependencies
+
 1.2.3
 -----
 
