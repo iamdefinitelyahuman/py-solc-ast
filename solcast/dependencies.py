@@ -40,20 +40,24 @@ def set_dependencies(source_nodes):
         # prevent recursion errors from self-dependency
         contract.dependencies.discard(contract)
 
-    # add recursive dependencies
+    # add dependencies of dependencies
     for contract in contract_list:
-        _add_dependencies(contract)
+        current_deps = contract.dependencies
+
+        while True:
+            expanded_deps = set(x for i in current_deps for x in i.dependencies)
+            expanded_deps |= current_deps
+            expanded_deps.discard(contract)
+
+            if current_deps == expanded_deps:
+                contract.dependencies = current_deps
+                break
+            current_deps = expanded_deps
 
     # convert dependency sets to lists
     for contract in contract_list:
         contract.dependencies = sorted(contract.dependencies, key=lambda k: k.name)
     return source_nodes
-
-
-def _add_dependencies(contract):
-    for node in contract.dependencies.copy():
-        contract.dependencies |= _add_dependencies(node)
-    return contract.dependencies.copy()
 
 
 def get_symbol_map(source_nodes):
