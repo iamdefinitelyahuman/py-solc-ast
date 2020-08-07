@@ -1,0 +1,53 @@
+on: ["push", "pull_request"]
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+name: main workflow
+
+jobs:
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install Tox
+      run: pip install tox wheel
+
+    - name: Run Tox
+      run: tox -e lint
+
+  core:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+        python-minor: [6, 7, 8]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Setup Python 3.${{ matrix.python-minor }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.${{ matrix.python-minor }}
+
+    - name: Install Tox
+      run: pip install tox wheel
+
+    - name: Run Tox
+      run: tox -e py3${{ matrix.python-minor }}
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        file: ./coverage.xml
+        fail_ci_if_error: true
