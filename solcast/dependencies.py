@@ -27,15 +27,19 @@ def set_dependencies(source_nodes):
 
         # using .. for libraries
         for node in contract.children(filters={"nodeType": "UsingForDirective"}):
-            ref = node.libraryName.referencedDeclaration
-            contract.libraries[_get_type_name(node.typeName)] = symbol_map[ref]
-            contract.dependencies.add(symbol_map[ref])
+            ref_node = symbol_map[node.libraryName.referencedDeclaration]
+            contract.libraries[_get_type_name(node.typeName)] = ref_node
+            contract.dependencies.add(ref_node)
 
         # unlinked libraries
         for node in contract.children(filters={"nodeType": "Identifier"}):
-            ref = node.referencedDeclaration
-            if ref in symbol_map and symbol_map[ref].contractKind == "library":
-                contract.dependencies.add(symbol_map[ref])
+            ref_node = symbol_map.get(node.referencedDeclaration)
+            if ref_node is None:
+                continue
+            if ref_node.nodeType in ("EnumDefinition", "StructDefinition"):
+                contract.dependencies.add(ref_node)
+            if ref_node.nodeType == "ContractDefinition" and ref_node.contractKind == "library":
+                contract.dependencies.add(ref_node)
 
         # prevent recursion errors from self-dependency
         contract.dependencies.discard(contract)
@@ -45,7 +49,7 @@ def set_dependencies(source_nodes):
         current_deps = contract.dependencies
 
         while True:
-            expanded_deps = set(x for i in current_deps for x in i.dependencies)
+            expanded_deps = set(x for i in current_deps for x in getattr(i, "dependencies", []))
             expanded_deps |= current_deps
             expanded_deps.discard(contract)
 
