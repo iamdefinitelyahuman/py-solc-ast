@@ -7,5 +7,6 @@ build/
 dist/
 *.pyc
 .coverage
+coverage.xml
 .mypy_cache/
 .tox/
