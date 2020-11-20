@@ -71,7 +71,14 @@ def get_symbol_map(source_nodes):
         source_nodes: list of SourceUnit objects."""
     symbol_map = {}
     for node in source_nodes:
-        symbol_map.update((v[0], node[k]) for k, v in node.exportedSymbols.items())
+        for key, value in ((k, x) for k, v in node.exportedSymbols.items() for x in v):
+            try:
+                symbol_map[value] = node[key]
+            except KeyError:
+                # solc >=0.7.2 may include exported symbols that reference
+                # other contracts, handle this gracefully
+                pass
+
     return symbol_map
 
 
