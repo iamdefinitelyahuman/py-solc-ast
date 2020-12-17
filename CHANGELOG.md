@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/iamdefinitelyahuman/py-solc-ast)
 
-## [1.2.6](https://github.com/iamdefinitelyahuman/py-solc-ast/releases/tag/v1.2.5) - 2020-11-20
+## [1.2.7](https://github.com/iamdefinitelyahuman/py-solc-ast/releases/tag/v1.2.7) - 2020-12-17
+### Fixed
+- consider contracts-as-types when calculating dependencies
+
+## [1.2.6](https://github.com/iamdefinitelyahuman/py-solc-ast/releases/tag/v1.2.6) - 2020-11-20
 ### Fixed
 - handle unknown symbols when calculating dependencies
 
