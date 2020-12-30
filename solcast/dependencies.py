@@ -31,7 +31,7 @@ def set_dependencies(source_nodes):
             contract.libraries[_get_type_name(node.typeName)] = ref_node
             contract.dependencies.add(ref_node)
 
-        # imported contracts used as types
+        # imported contracts used as types in assignment
         for node in contract.children(filters={"nodeType": "UserDefinedTypeName"}):
             try:
                 ref_node = symbol_map[node.referencedDeclaration]
@@ -39,6 +39,15 @@ def set_dependencies(source_nodes):
             except KeyError:
                 # not all UserDefinedTypeName nodes are external dependencies
                 continue
+
+        # imported contracts as types, no assignment
+        for node in contract.children(
+            filters={"nodeType": "FunctionCall", "expression.nodeType": "Identifier"}
+        ):
+            if node.typeDescriptions["typeString"].startswith("contract "):
+                ref_id = node.expression.referencedDeclaration
+                if ref_id in symbol_map:
+                    contract.dependencies.add(symbol_map[ref_id])
 
         # unlinked libraries
         for node in contract.children(filters={"nodeType": "Identifier"}):
