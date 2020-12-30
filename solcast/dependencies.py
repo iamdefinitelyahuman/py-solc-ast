@@ -33,12 +33,9 @@ def set_dependencies(source_nodes):
 
         # imported contracts used as types in assignment
         for node in contract.children(filters={"nodeType": "UserDefinedTypeName"}):
-            try:
-                ref_node = symbol_map[node.referencedDeclaration]
-                contract.dependencies.add(ref_node)
-            except KeyError:
-                # not all UserDefinedTypeName nodes are external dependencies
-                continue
+            ref_id = node.referencedDeclaration
+            if ref_id in symbol_map:
+                contract.dependencies.add(symbol_map[ref_id])
 
         # imported contracts as types, no assignment
         for node in contract.children(
