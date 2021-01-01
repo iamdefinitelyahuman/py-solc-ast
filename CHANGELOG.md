@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/iamdefinitelyahuman/py-solc-ast)
 
+## [1.2.8](https://github.com/iamdefinitelyahuman/py-solc-ast/releases/tag/v1.2.8) - 2021-01-01
+### Fixed
+- handle contracts-as-types without assignment when calculating dependencies
+
 ## [1.2.7](https://github.com/iamdefinitelyahuman/py-solc-ast/releases/tag/v1.2.7) - 2020-12-17
 ### Fixed
 - consider contracts-as-types when calculating dependencies
