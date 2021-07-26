@@ -22,3 +22,10 @@ def test_mutation(path):
     original = deepcopy(output_json)
     solcast.from_standard_output(output_json)
     assert original == output_json
+
+
+def test_dependencies_sol0_8_6():
+    result = solcast.from_standard_output_json("tests/compiled/lp-token.json")
+    lp_token_src = next(v for v in result if v.absolutePath == "./contracts/LpToken.sol")
+    lp_token = lp_token_src["LpToken"]
+    assert any(dep.name == "ERC20" for dep in lp_token.dependencies)
