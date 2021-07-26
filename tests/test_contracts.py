@@ -10,6 +10,22 @@ import solcast
 JSON_PATHS = list(Path("tests/compiled").glob("*.json"))
 
 
+def test_dependencies():
+    ast = solcast.from_standard_output_json("tests/compiled/aragon.json")
+    node = next(i for i in ast[-1] if i.id == 16359)
+    deps = set(i.name for i in node.dependencies)
+    expected = {
+        "Assert",
+        "DelegateProxy",
+        "ERCProxy",
+        "IsContract",
+        "ScriptHelpers",
+        "Target",
+        "ThrowProxy",
+    }
+    assert deps == expected
+
+
 @pytest.mark.parametrize("path", JSON_PATHS)
 def test_solcast(path):
     solcast.from_standard_output_json(path)
