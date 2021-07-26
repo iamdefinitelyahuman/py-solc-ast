@@ -78,7 +78,13 @@ def set_dependencies(source_nodes):
 
     # convert dependency sets to lists
     for contract in contract_list:
+
+        if contract in contract.dependencies:
+            # a contract should not list itself as a dependency
+            contract.dependencies.remove(contract)
+
         contract.dependencies = sorted(contract.dependencies, key=lambda k: k.name)
+
     return source_nodes
 
 
