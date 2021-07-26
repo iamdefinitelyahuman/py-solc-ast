@@ -6,6 +6,8 @@ This changelog format is based on [Keep a Changelog](https://keepachangelog.com/
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/iamdefinitelyahuman/py-solc-ast)
+### Fixed
+- fix issue with inheritance in Solidity >= 0.8.3
 
 ## [1.2.8](https://github.com/iamdefinitelyahuman/py-solc-ast/releases/tag/v1.2.8) - 2021-01-01
 ### Fixed

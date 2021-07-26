@@ -69,9 +69,12 @@ def set_dependencies(source_nodes):
             expanded_deps.discard(contract)
 
             if current_deps == expanded_deps:
-                contract.dependencies = current_deps
                 break
             current_deps = expanded_deps
+
+        current_deps |= {symbol_map[i] for i in contract.linearizedBaseContracts}
+
+        contract.dependencies = current_deps
 
     # convert dependency sets to lists
     for contract in contract_list:
