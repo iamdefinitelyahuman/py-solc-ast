@@ -8,7 +8,6 @@ from .nodes import node_class_factory
 
 
 def from_standard_output_json(path):
-
     """
     Generates SourceUnit objects from a standard output json file.
 
@@ -21,7 +20,6 @@ def from_standard_output_json(path):
 
 
 def from_standard_output(output_json):
-
     """
     Generates SourceUnit objects from a standard output json as a dict.
 
@@ -35,7 +33,6 @@ def from_standard_output(output_json):
 
 
 def from_ast(ast):
-
     """
     Generates a SourceUnit object from the given AST. Dependencies are not set.
     """
