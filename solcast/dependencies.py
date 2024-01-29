@@ -15,11 +15,7 @@ def set_dependencies(source_nodes):
     # add immediate dependencies
     for contract in contract_list:
         contract.dependencies = set()
-        contract.libraries = dict(
-            (_get_type_name(i.typeName), i.libraryName.name)
-            for i in contract.nodes
-            if i.nodeType == "UsingForDirective"
-        )
+        contract.libraries = dict()
 
         # listed dependencies
         for key in contract.contractDependencies:
@@ -28,7 +24,7 @@ def set_dependencies(source_nodes):
         # using .. for libraries
         for node in contract.children(filters={"nodeType": "UsingForDirective"}):
             ref_node = symbol_map[node.libraryName.referencedDeclaration]
-            contract.libraries[_get_type_name(node.typeName)] = ref_node
+            contract.libraries[node.libraryName.name] = ref_node
             contract.dependencies.add(ref_node)
 
         # imported contracts used as types in assignment
@@ -78,7 +74,6 @@ def set_dependencies(source_nodes):
 
     # convert dependency sets to lists
     for contract in contract_list:
-
         if contract in contract.dependencies:
             # a contract should not list itself as a dependency
             contract.dependencies.remove(contract)
@@ -104,13 +99,3 @@ def get_symbol_map(source_nodes):
                 pass
 
     return symbol_map
-
-
-def _get_type_name(node):
-    if node is None:
-        return None
-    if hasattr(node, "name"):
-        return node.name
-    if hasattr(node, "typeDescriptions"):
-        return node.typeDescriptions["typeString"]
-    return None
