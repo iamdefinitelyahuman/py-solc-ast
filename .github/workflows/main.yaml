@@ -13,10 +13,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Setup Python 3.8
+    - name: Setup Python 3.12
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.12
 
     - name: Install Tox
       run: pip install tox wheel
@@ -30,7 +30,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest, ubuntu-latest, windows-latest]
-        python-minor: [6, 7, 8, 9]
+        python-minor: [10, 11, 12]
 
     steps:
     - uses: actions/checkout@v2
@@ -50,4 +50,4 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         file: ./coverage.xml
-        fail_ci_if_error: true
+        fail_ci_if_error: false
