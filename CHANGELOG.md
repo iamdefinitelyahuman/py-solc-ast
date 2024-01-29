@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/iamdefinitelyahuman/py-solc-ast)
 
+## [1.2.10](https://github.com/iamdefinitelyahuman/py-solc-ast/releases/tag/v1.2.10) - 2024-01-29
+### Fixed
+- simplify / fix issue with retrieving library names from `UsingForDirective`
+
 ## [1.2.9](https://github.com/iamdefinitelyahuman/py-solc-ast/releases/tag/v1.2.9) - 2021-07-26
 ### Fixed
 - fix issue with inheritance in Solidity >= 0.8.3
