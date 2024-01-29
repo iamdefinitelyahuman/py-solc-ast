@@ -5,6 +5,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import pytest
+
 import solcast
 
 JSON_PATHS = list(Path("tests/compiled").glob("*.json"))
