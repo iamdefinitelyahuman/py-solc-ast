@@ -2,12 +2,13 @@
 
 import json
 from pathlib import Path
+from typingi import Any, Dict
 
 from .dependencies import set_dependencies
 from .nodes import node_class_factory
 
 
-def from_standard_output_json(path):
+def from_standard_output_json(path: str):
     """
     Generates SourceUnit objects from a standard output json file.
 
@@ -19,7 +20,7 @@ def from_standard_output_json(path):
     return from_standard_output(output_json)
 
 
-def from_standard_output(output_json):
+def from_standard_output(output_json: Dict[str, Any]):
     """
     Generates SourceUnit objects from a standard output json as a dict.
 
@@ -32,7 +33,7 @@ def from_standard_output(output_json):
     return source_nodes
 
 
-def from_ast(ast):
+def from_ast(ast: Dict[str, Any]):
     """
     Generates a SourceUnit object from the given AST. Dependencies are not set.
     """

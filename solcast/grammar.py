@@ -1,9 +1,10 @@
 #!/usr/bin/python3
+from typing import Dict, Final, List
 
 # This list is incomplete - feel free to add to it and open a pull request
 # https://solidity.readthedocs.io/en/latest/miscellaneous.html#language-grammar
 
-BASE_NODE_TYPES = {
+BASE_NODE_TYPES: Final[Dict[str, List[str]]] = {
     "ContractPart": [
         "EnumDefinition",
         "EventDefinition",
